@@ -1,0 +1,50 @@
+{
+	"name": "@firestone-hs/twitch-presence",
+	"version": "1.0.1",
+	"description": "",
+	"scripts": {
+		"lint": "eslint --color --fix --ext .ts .",
+		"build": "npm audit fix && webpack --color",
+		"package": "sam package --template-file template.yaml --s3-bucket com.zerotoheroes.artifact --output-template-file template.packaged.yaml",
+		"deploy": "sam deploy --template-file template.packaged.yaml --stack-name TwitchPresenceStack --capabilities CAPABILITY_IAM",
+		"full-deploy": "npm run build && npm run package && npm run deploy"
+	},
+	"repository": {},
+	"author": "",
+	"license": "MIT",
+	"private": false,
+	"main": "dist/model.js",
+	"types": "dist/model.d.ts",
+	"files": [
+		"dist/**/*"
+	],
+	"dependencies": {
+		"@firestone-hs/aws-lambda-utils": "^0.0.37",
+		"@firestone-hs/reference-data": "^1.0.27",
+		"aws-sdk": "^2.1040.0",
+		"mysql": "^2.18.1",
+		"serverless-mysql": "^1.5.4",
+		"sqlstring": "^2.3.2"
+	},
+	"devDependencies": {
+		"@types/aws-lambda": "8.10.31",
+		"@types/jsonwebtoken": "^9.0.2",
+		"@types/jszip": "^3.1.7",
+		"@types/mysql": "^2.15.7",
+		"@types/node": "^18.16.0",
+		"@types/pako": "^1.0.1",
+		"@typescript-eslint/eslint-plugin": "^5.59.1",
+		"@typescript-eslint/parser": "^5.59.1",
+		"eslint": "^8.39.0",
+		"eslint-config-prettier": "^8.8.0",
+		"eslint-plugin-prettier": "^4.2.1",
+		"eslint-webpack-plugin": "^4.0.1",
+		"prettier": "^2.8.8",
+		"ts-loader": "^9.4.2",
+		"ts-node": "^10.9.1",
+		"typescript": "^5.0.4",
+		"webpack": "^5.80.0",
+		"webpack-cli": "^5.0.2",
+		"yaml-cfn": "^0.2.2"
+	}
+}

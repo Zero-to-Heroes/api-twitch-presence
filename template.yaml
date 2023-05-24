@@ -1,0 +1,152 @@
+# https://github.com/awslabs/serverless-application-model/blob/develop/versions/2016-10-31.md
+# Indentation needs to be set with spaces, because YAML...
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: API endpoint for twitch presence
+
+Globals:
+    Api:
+        # API Gateway regional endpoints
+        EndpointConfiguration: EDGE
+        Cors:
+            AllowMethods: "'*'"
+            AllowHeaders: "'*'"
+            AllowOrigin: "'*'"
+    Function:
+        Environment:
+            Variables:
+                SQS_URL: !Ref SaveTwitchPresenceQueue
+
+Resources:
+    SaveTwitchPresenceQueue:
+        Type: AWS::SQS::Queue
+        Properties:
+            QueueName: deferred-save-twitch-presence
+            VisibilityTimeout: 601
+    ApiGatewayApi:
+        Type: AWS::Serverless::Api
+        Properties:
+            StageName: prod
+            CacheClusterEnabled: true
+            CacheClusterSize: '0.5'
+            MethodSettings:
+                - ResourcePath: /
+                  HttpMethod: GET
+                  CachingEnabled: true
+                  CacheTtlInSeconds: 60
+                - ResourcePath: /
+                  HttpMethod: POST
+    StartSaveTwitchPresenceFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: start-save-twitch-presence.default
+            Runtime: nodejs16.x
+            Timeout: 3
+            MemorySize: 128
+            CodeUri: ./dist/start-save-twitch-presence
+            Policies:
+                - AWSLambdaVPCAccessExecutionRole
+                - AmazonSESFullAccess
+                - AmazonSQSFullAccess
+                - SecretsManagerReadWrite
+                - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
+            Tags:
+                LambdaName: api-start-save-twitch-presence
+            Events:
+                SaveTwitchPresenceResource:
+                    Type: Api
+                    Properties:
+                        Path: /
+                        Method: post
+                        RestApiId:
+                            Ref: ApiGatewayApi
+    StartSaveTwitchPresenceFunction2:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: start-save-twitch-presence.default
+            Runtime: nodejs16.x
+            CodeUri: ./dist/start-save-twitch-presence
+            Timeout: 5
+            Policies:
+                - AWSLambdaVPCAccessExecutionRole
+                - AmazonSESFullAccess
+                - AmazonSQSFullAccess
+                - SecretsManagerReadWrite
+                - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
+            Tags:
+                LambdaName: api-start-save-twitch-presence-2
+            AutoPublishAlias: live
+            FunctionUrlConfig:
+                AuthType: NONE
+    ProcessSaveTwitchPresenceFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: process-save-twitch-presence.default
+            Runtime: nodejs16.x
+            CodeUri: ./dist/process-save-twitch-presence
+            MemorySize: 128
+            ReservedConcurrentExecutions: 5
+            Policies:
+                - AWSLambdaVPCAccessExecutionRole
+                - SecretsManagerReadWrite
+                - AmazonSESFullAccess
+                - AmazonSQSFullAccess
+                - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
+            Tags:
+                LambdaName: process-save-twitch-presence
+            Timeout: 60
+            Events:
+                SQSEvent:
+                    Type: SQS
+                    Properties:
+                        Queue: !GetAtt SaveTwitchPresenceQueue.Arn
+                        # BatchSize: 1
+    RetrieveTwitchPresenceFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: retrieve-twitch-presence.default
+            Runtime: nodejs16.x
+            # API Gateway timeout is 30
+            Timeout: 29
+            MemorySize: 156
+            CodeUri: ./dist/retrieve-twitch-presence
+            Policies:
+                - AWSLambdaVPCAccessExecutionRole
+                - AmazonSESFullAccess
+                - AmazonSQSFullAccess
+                - SecretsManagerReadWrite
+                - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
+            Tags:
+                LambdaName: api-retrieve-twitch-presence
+            Events:
+                GetTwitchPresenceResource:
+                    Type: Api
+                    Properties:
+                        Path: /
+                        Method: get
+                        RestApiId:
+                            Ref: ApiGatewayApi
+    RetrieveTwitchPresenceFunction2:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: retrieve-twitch-presence.default
+            Runtime: nodejs16.x
+            CodeUri: ./dist/retrieve-twitch-presence
+            Timeout: 29
+            Policies:
+                - AWSLambdaVPCAccessExecutionRole
+                - AmazonSESFullAccess
+                - AmazonSQSFullAccess
+                - SecretsManagerReadWrite
+                - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
+            Tags:
+                LambdaName: api-retrieve-twitch-presence-2
+            AutoPublishAlias: live
+            FunctionUrlConfig:
+                AuthType: NONE
+# Outputs:
+#     SaveTwitchPresenceApi:
+#         Description: URL to save twitch presence
+#         Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/twitch-presence'
+#         Export:
+#             Name: SaveTwitchPresenceApi
