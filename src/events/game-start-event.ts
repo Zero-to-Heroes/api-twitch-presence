@@ -38,6 +38,8 @@ const buildRankInfo = (event: GameStartEvent): string => {
 					return extractRankInfo(event.data.matchInfo?.localPlayer?.wild);
 				case GameFormat.FT_CLASSIC:
 					return extractRankInfo(event.data.matchInfo?.localPlayer?.classic);
+				case GameFormat.FT_TWIST:
+					return extractRankInfo(event.data.matchInfo?.localPlayer?.twist);
 				default:
 					return extractRankInfo(event.data.matchInfo?.localPlayer?.standard);
 			}
