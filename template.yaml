@@ -23,19 +23,6 @@ Resources:
         Properties:
             QueueName: deferred-save-twitch-presence
             VisibilityTimeout: 601
-    ApiGatewayApi:
-        Type: AWS::Serverless::Api
-        Properties:
-            StageName: prod
-            CacheClusterEnabled: true
-            CacheClusterSize: '0.5'
-            MethodSettings:
-                - ResourcePath: /
-                  HttpMethod: GET
-                  CachingEnabled: true
-                  CacheTtlInSeconds: 60
-                - ResourcePath: /
-                  HttpMethod: POST
     StartSaveTwitchPresenceFunction2:
         Type: AWS::Serverless::Function
         Properties:
