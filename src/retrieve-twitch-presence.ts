@@ -1,4 +1,4 @@
-import { getConnection, groupByFunction, http, runQuery } from '@firestone-hs/aws-lambda-utils';
+import { getConnection, groupByFunction, http, logBeforeTimeout, runQuery } from '@firestone-hs/aws-lambda-utils';
 import { SecretsManager } from 'aws-sdk';
 import { GetSecretValueRequest, GetSecretValueResponse } from 'aws-sdk/clients/secretsmanager';
 import { URLSearchParams } from 'url';
@@ -8,7 +8,8 @@ import { chunk } from './utils';
 
 const secretsManager = new SecretsManager({ region: 'us-west-2' });
 
-export default async (event): Promise<any> => {
+export default async (event, context): Promise<any> => {
+	const cleanup = logBeforeTimeout(context);
 	const mysql = await getConnection();
 	const dbData: readonly InternalDbRow[] = await runQuery(
 		mysql,
@@ -62,6 +63,7 @@ export default async (event): Promise<any> => {
 			'Content-Encoding': 'gzip',
 		},
 	};
+	cleanup();
 	return response;
 };
 

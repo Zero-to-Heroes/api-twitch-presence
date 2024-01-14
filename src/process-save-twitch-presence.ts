@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
-import { getConnection } from '@firestone-hs/aws-lambda-utils';
+import { getConnection, logBeforeTimeout } from '@firestone-hs/aws-lambda-utils';
 import { ServerlessMysql } from 'serverless-mysql';
 import { handleGameEndEvent } from './events/game-end-event';
 import { handleGameStartBgsEvent } from './events/game-start-bgs-event';
@@ -10,20 +10,16 @@ import { GameStartBgsEvent, GameStartEvent, GameStartMercsEvent, PresenceEvent }
 // let allCards: AllCardsService;
 
 export default async (event, context): Promise<any> => {
+	const cleanup = logBeforeTimeout(context);
 	const events: readonly PresenceEvent[] = (event.Records as any[])
-		.map(event => JSON.parse(event.body))
+		.map((event) => JSON.parse(event.body))
 		.reduce((a, b) => a.concat(b), []);
-
-	// if (!allCards?.getCards()?.length) {
-	// 	allCards = new AllCardsService();
-	// 	await allCards.initializeCardsDb();
-	// }
-
 	const mysql = await getConnection();
 	for (const ev of events) {
 		await processEvent(ev, mysql);
 	}
 	await mysql.end();
+	cleanup();
 
 	const response = {
 		statusCode: 200,
