@@ -124,7 +124,7 @@ const getStreamsInfo = async (
 		// TODO: chunnk the logins (limited to 100) and handle pagination
 		const userLogins = chunk.map((name) => `user_login=${name}`).join('&');
 		const url = `https://api.twitch.tv/helix/streams?first=${listSize}&${userLogins}`;
-		console.log('calling URL', url);
+		// console.log('calling URL', url);
 		const streamsResponseStr = await http(url, {
 			method: 'GET',
 			headers: {
