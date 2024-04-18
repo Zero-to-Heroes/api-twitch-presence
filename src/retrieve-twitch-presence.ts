@@ -96,7 +96,15 @@ const mergeInfos = (dbInfos: readonly InternalDbRow[], twitchInfos: readonly Twi
 
 			return {
 				...twitchInfo,
-				...dbInfo,
+				twitchUserName: dbInfo.twitchUserName,
+				lastUpdateDate: dbInfo.lastUpdateDate,
+				gameStatus: dbInfo.gameStatus,
+				formatType: dbInfo.formatType,
+				gameType: dbInfo.gameType,
+				scenarioId: dbInfo.scenarioId,
+				playerRank: dbInfo.playerRank,
+				playerCardId: dbInfo.playerCardId,
+				opponentCardId: dbInfo.opponentCardId,
 			};
 		})
 		.filter((info) => !!info);

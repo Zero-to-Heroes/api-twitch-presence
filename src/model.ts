@@ -37,4 +37,14 @@ export interface InternalDbRow {
 	readonly opponentCardId: string;
 }
 
-export interface PresenceInfo extends InternalDbRow, TwitchInfo {}
+export interface PresenceInfo extends TwitchInfo {
+	readonly twitchUserName: string;
+	readonly lastUpdateDate: Date;
+	readonly gameStatus: string;
+	readonly formatType: GameFormat;
+	readonly gameType: GameType;
+	readonly scenarioId: number;
+	readonly playerRank: string;
+	readonly playerCardId: string;
+	readonly opponentCardId: string;
+}
