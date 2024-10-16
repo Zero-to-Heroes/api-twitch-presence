@@ -62,7 +62,8 @@ Resources:
                     Type: SQS
                     Properties:
                         Queue: !GetAtt SaveTwitchPresenceQueue.Arn
-                        # BatchSize: 1
+                        BatchSize: 30
+                        MaximumBatchingWindowInSeconds: 30
     RetrieveTwitchPresenceFunction2:
         Type: AWS::Serverless::Function
         Properties:
