@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
-import { getConnection, logBeforeTimeout } from '@firestone-hs/aws-lambda-utils';
+import { getConnectionProxy, logBeforeTimeout } from '@firestone-hs/aws-lambda-utils';
 import { ServerlessMysql } from 'serverless-mysql';
 import { handleGameEndEvent } from './events/game-end-event';
 import { handleGameStartBgsEvent } from './events/game-start-bgs-event';
@@ -14,7 +14,7 @@ export default async (event, context): Promise<any> => {
 	const events: readonly PresenceEvent[] = (event.Records as any[])
 		.map((event) => JSON.parse(event.body))
 		.reduce((a, b) => a.concat(b), []);
-	const mysql = await getConnection();
+	const mysql = await getConnectionProxy();
 	for (const ev of events) {
 		await processEvent(ev, mysql);
 	}

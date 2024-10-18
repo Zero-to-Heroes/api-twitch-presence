@@ -1,4 +1,4 @@
-import { getConnection, groupByFunction, http, logBeforeTimeout, runQuery } from '@firestone-hs/aws-lambda-utils';
+import { getConnectionProxy, groupByFunction, http, logBeforeTimeout, runQuery } from '@firestone-hs/aws-lambda-utils';
 import { SecretsManager } from 'aws-sdk';
 import { GetSecretValueRequest, GetSecretValueResponse } from 'aws-sdk/clients/secretsmanager';
 import { URLSearchParams } from 'url';
@@ -8,9 +8,26 @@ import { chunk } from './utils';
 
 const secretsManager = new SecretsManager({ region: 'us-west-2' });
 
+const CACHE_DURATION = 1 * 60 * 1000;
+let cachedResult = null;
+let lastUpdateDate: number | null = null;
+
 export default async (event, context): Promise<any> => {
+	if (cachedResult && Date.now() - lastUpdateDate < CACHE_DURATION) {
+		return {
+			statusCode: 200,
+			isBase64Encoded: true,
+			body: cachedResult,
+			headers: {
+				'Content-Type': 'application/json',
+				'Content-Encoding': 'gzip',
+			},
+		};
+	}
+
+	console.log('retrieving twitch presence to repopulate cache', Date.now() - lastUpdateDate);
 	const cleanup = logBeforeTimeout(context);
-	const mysql = await getConnection();
+	const mysql = await getConnectionProxy();
 	const dbData: readonly InternalDbRow[] = await runQuery(
 		mysql,
 		`
@@ -54,6 +71,10 @@ export default async (event, context): Promise<any> => {
 
 	const stringResults = JSON.stringify(result);
 	const gzippedResults = gzipSync(stringResults).toString('base64');
+
+	cachedResult = gzippedResults;
+	lastUpdateDate = Date.now();
+
 	const response = {
 		statusCode: 200,
 		isBase64Encoded: true,

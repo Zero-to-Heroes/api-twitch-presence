@@ -45,6 +45,11 @@ Resources:
             CodeUri: ./dist/process-save-twitch-presence
             MemorySize: 128
             ReservedConcurrentExecutions: 5
+            VpcConfig:
+                SecurityGroupIds:
+                    - sg-eccd2691
+                SubnetIds:
+                    - subnet-894624ec # Only the private subnet
             # Layers:
             #     - !Sub "arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:14"
             Policies:
@@ -53,6 +58,8 @@ Resources:
                 - AmazonSESFullAccess
                 - AmazonSQSFullAccess
                 - arn:aws:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy
+                # For VPC
+                - AWSLambdaENIManagementAccess
                 - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
             Tags:
                 LambdaName: process-save-twitch-presence
@@ -71,6 +78,11 @@ Resources:
             Runtime: nodejs18.x
             CodeUri: ./dist/retrieve-twitch-presence
             Timeout: 29
+            VpcConfig:
+                SecurityGroupIds:
+                    - sg-eccd2691
+                SubnetIds:
+                    - subnet-894624ec # Only the private subnet
             # Layers:
             #     - !Sub "arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:14"
             Policies:
@@ -79,7 +91,9 @@ Resources:
                 - AmazonSQSFullAccess
                 - SecretsManagerReadWrite
                 - arn:aws:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy
-                - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
+                # For VPC
+                - AWSLambdaENIManagementAccess
+                # - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
             Tags:
                 LambdaName: api-retrieve-twitch-presence-2
             AutoPublishAlias: live
