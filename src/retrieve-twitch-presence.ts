@@ -44,11 +44,12 @@ export default async (event, context): Promise<any> => {
 		}
 	});
 	const validDbData = dbData.filter((r) => r.twitchUserName?.match(userNameRegex));
+	// console.log('all valid twitch user names', JSON.stringify(validDbData.map((r) => r.twitchUserName)));
 	const groupedByStreamer = groupByFunction((r: InternalDbRow) => r.twitchUserName)(validDbData);
 	const latestStreamerData = Object.values(groupedByStreamer).map(
 		(r) => [...r].sort((a, b) => b.lastUpdateDate?.getTime() - a.lastUpdateDate?.getTime())[0],
 	);
-	// console.log('all valid twitch user names', JSON.stringify(validDbData.map(r => r.twitchUserName)));
+	// console.log('latest streamer data', latestStreamerData);
 
 	const secretRequest: GetSecretValueRequest = {
 		SecretId: 'twitch',
@@ -58,6 +59,7 @@ export default async (event, context): Promise<any> => {
 		latestStreamerData.map((r) => r.twitchUserName),
 		secret,
 	);
+	// console.log('twitch info', twitchInfo);
 	// const inDbButNotStreaming = latestStreamerData
 	// 	.filter((d) => !twitchInfo.some((t) => t.user_login === d.twitchUserName))
 	// 	.map((info) => info.twitchUserName);
@@ -91,18 +93,25 @@ export default async (event, context): Promise<any> => {
 const mergeInfos = (dbInfos: readonly InternalDbRow[], twitchInfos: readonly TwitchInfo[]): readonly PresenceInfo[] => {
 	const relevantDbInfos = dbInfos.filter((info) => {
 		const isOk =
-			info.gameStatus === 'ongoing' || Date.now() - new Date(info.lastUpdateDate).getTime() < 5 * 60 * 1000;
-		if (!isOk) {
-			// console.debug(
-			// 	'not valid',
-			// 	info.twitchUserName,
-			// 	info.gameStatus,
-			// 	Date.now() - new Date(info.lastUpdateDate).getTime() < 5 * 60 * 1000,
-			// 	Date.now() - new Date(info.lastUpdateDate).getTime(),
-			// );
-		}
+			info.gameStatus === 'ongoing' && Date.now() - new Date(info.lastUpdateDate).getTime() < 15 * 60 * 1000;
+		// console.debug(
+		// 	'is valid?',
+		// 	info.twitchUserName,
+		// 	info.gameStatus,
+		// 	info.lastUpdateDate,
+		// 	Date.now() - new Date(info.lastUpdateDate).getTime() < 5 * 60 * 1000,
+		// 	Date.now() - new Date(info.lastUpdateDate).getTime(),
+		// 	Date.now(),
+		// 	new Date(info.lastUpdateDate).getTime(),
+		// );
+		// if (!isOk) {
+		// }
 		return isOk;
 	});
+	// console.log(
+	// 	'relevant db infos',
+	// 	relevantDbInfos.map((info) => info.twitchUserName),
+	// );
 	return twitchInfos
 		.map((twitchInfo) => {
 			const dbInfo = relevantDbInfos.find(
